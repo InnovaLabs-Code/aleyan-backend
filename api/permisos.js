@@ -1,18 +1,19 @@
 const { setCorsHeaders } = require('../src/middlewares/cors');
-const { obtenerPermisos, actualizarPermisosRol } = require('../src/controllers/permisoController');
+const { obtenerPermisosPorRol, actualizarPermisosRol } = require('../src/controllers/permisoController');
 
 module.exports = async (req, res) => {
   if (setCorsHeaders(req, res)) return res.status(200).end();
 
   try {
     if (req.method === 'GET') {
-      const permisos = await obtenerPermisos();
-      return res.status(200).json({ success: true, data: permisos });
+      const { rol } = req.query; // Ejemplo: ?rol=Administrador General
+      const matriz = await obtenerPermisosPorRol(rol);
+      return res.status(200).json({ success: true, data: matriz });
     }
 
     if (req.method === 'POST') {
-      const { roleId, permissionIds } = req.body;
-      const resultado = await actualizarPermisosRol(roleId, permissionIds);
+      const { rol, permisos } = req.body;
+      const resultado = await actualizarPermisosRol(rol, permisos);
       return res.status(200).json(resultado);
     }
 
