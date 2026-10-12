@@ -1,33 +1,48 @@
 const { supabase } = require('../config/supabase');
 
-// 1. LEER (GET) - Acepta columnas personalizadas para tus alias de React
+// 1. LEER (GET) - Filtra por is_active y mapea a 'status' para React
 const leerRegistros = async (tabla, columnas = '*') => {
   const { data, error } = await supabase
     .from(tabla)
     .select(columnas)
-    .eq('status', 'activo')
+    .eq('is_active', true)
     .order('id', { ascending: true });
+    
   if (error) throw new Error(error.message);
-  return data;
+  
+  // Traducir a lo que espera tu archivo types/masters.ts
+  return data.map(item => ({
+    ...item,
+    status: item.is_active ? 'activo' : 'inactivo'
+  }));
 };
 
 // 2. CREAR (POST)
 const crearRegistro = async (tabla, datos) => {
-  const { data, error } = await supabase.from(tabla).insert([datos]).select().single();
+  // Limpiamos 'status' y aseguramos que is_active sea true
+  const { status, ...datosLimpios } = datos;
+  datosLimpios.is_active = true;
+
+  const { data, error } = await supabase.from(tabla).insert([datosLimpios]).select().single();
   if (error) throw new Error(error.message);
-  return data;
+  
+  return { ...data, status: 'activo' };
 };
 
 // 3. ACTUALIZAR (PUT)
 const actualizarRegistro = async (tabla, id, datos) => {
-  const { data, error } = await supabase.from(tabla).update(datos).eq('id', id).select().single();
+  const { status, ...datosLimpios } = datos;
+  if (status) datosLimpios.is_active = (status === 'activo');
+
+  const { data, error } = await supabase.from(tabla).update(datosLimpios).eq('id', id).select().single();
   if (error) throw new Error(error.message);
-  return data;
+  
+  return { ...data, status: data.is_active ? 'activo' : 'inactivo' };
 };
 
-// 4. BORRAR (DELETE) - Borrado lógico
+// 4. BORRAR (DELETE) - Borrado lógico usando is_active
 const eliminarRegistro = async (tabla, id) => {
-  const { data, error } = await supabase.from(tabla).update({ status: 'inactivo' }).eq('id', id).select().single();
+  const { data, error } = await supabase.from(tabla).update({ is_active: false }).eq('id', id).select().single();
   if (error) throw new Error(error.message);
   return data;
 };
