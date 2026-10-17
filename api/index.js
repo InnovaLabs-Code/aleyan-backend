@@ -1,33 +1,41 @@
-const { supabase } = require('../src/config/supabase');
+// Archivo: api/index.js
+const express = require('express');
+const cors = require('cors');
+const app = express();
 
-module.exports = async (req, res) => {
-  // Habilitar CORS para preflight de los navegadores
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+// Middlewares globales
+app.use(cors());
+app.use(express.json());
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+// Importar todas tus rutas desde la nueva carpeta
+const almacenes = require('../src/routes/almacenes');
+const areas = require('../src/routes/areas');
+const categorias = require('../src/routes/categorias');
+const clientes = require('../src/routes/clientes');
+const formasPago = require('../src/routes/formas_pago');
+const login = require('../src/routes/login');
+const permisos = require('../src/routes/permisos');
+const personal = require('../src/routes/personal');
+const proveedores = require('../src/routes/proveedores');
+const proyectos = require('../src/routes/proyectos');
+const ubicaciones = require('../src/routes/ubicaciones');
+const unidades = require('../src/routes/unidades');
+const usuarios = require('../src/routes/usuarios');
 
-  try {
-    // Consulta de prueba a la base de datos
-    const { data, error } = await supabase.from('currencies').select('*');
+// Registrar los endpoints para que el frontend los encuentre
+app.use('/api/almacenes', almacenes);
+app.use('/api/areas', areas);
+app.use('/api/categorias', categorias);
+app.use('/api/clientes', clientes);
+app.use('/api/formas_pago', formasPago);
+app.use('/api/login', login);
+app.use('/api/permisos', permisos);
+app.use('/api/personal', personal);
+app.use('/api/proveedores', proveedores);
+app.use('/api/proyectos', proyectos);
+app.use('/api/ubicaciones', ubicaciones);
+app.use('/api/unidades', unidades);
+app.use('/api/usuarios', usuarios);
 
-    if (error) throw error;
-
-    return res.status(200).json({
-      success: true,
-      message: '¡Conexión exitosa al backend de Aleyan Core!',
-      data: data
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Error al conectar con la base de datos',
-      error: error.message
-    });
-  }
-};
+// Exportar la aplicación para Vercel
+module.exports = app;
